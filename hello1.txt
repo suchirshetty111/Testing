@@ -1,1 +1,23 @@
-money heist
+import numpy as np
+import pandas as pd
+import statsmodels.api as sm
+from sklearn.datasets import load_diabetes
+from sklearn.preprocessing import StandardScaler
+
+# Load and preprocess data
+df = load_diabetes(as_frame=True).frame
+X, y = df.drop(columns=['target']), df['target']
+X_scaled = sm.add_constant(StandardScaler().fit_transform(X))
+
+# Backward Elimination
+def backward_elimination(X, y, sl=0.05):
+    while True:
+        model = sm.OLS(y, X).fit()
+        max_p = model.pvalues.max()
+        if max_p > sl:
+            X = X.drop(columns=[model.pvalues.idxmax()])
+        else:
+            return X, model
+
+X_selected, final_model = backward_elimination(pd.DataFrame(X_scaled, columns=['Intercept'] + list(X.columns)), y)
+print("\nFinal Selected Features:", list(X_selected.columns))
